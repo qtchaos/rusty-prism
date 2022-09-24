@@ -16,4 +16,6 @@ pub struct Product {
     pub url: String,
     pub image_url: String,
     pub brand: String,
+    pub price_difference_float: f32,
+    pub price_difference_percentage: f32,
 }

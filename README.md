@@ -2,8 +2,8 @@
 
 rusty-prism is a rocket.rs API made to interact efficiently with MongoDB.
 
-- **Persistent data:** Balance and other information is stored in seperate files, meaning that you can continue where you left off.
-- **Modular design:** Most commands are stored in their own file, making development easier.
+- **Rustic:** Built with Rust, so it's memory safe and runs almost as fast as C!
+- **Rocket:** Fast and easy development with rocket.rs
 
 ## Installation
 
