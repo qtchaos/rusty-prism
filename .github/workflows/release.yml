@@ -20,6 +20,6 @@ jobs:
       - uses: actions/checkout@v3
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          # Executable name
+          # Executable names.
           bin: rust-prism
           token: ${{ secrets.GITHUB_TOKEN }}
