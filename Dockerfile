@@ -1,9 +1,12 @@
-FROM rust:latest
+FROM ubuntu:20.04
 
-WORKDIR /usr/src/rusty
+RUN apt-get update
+RUN apt-get install -y curl
 
-COPY . .
+EXPOSE 449
+WORKDIR /
 
-RUN cargo build --release
+RUN curl -LJO https://github.com/qtchaos/rusty-prism/releases/latest/download/rusty-prism
+RUN chmod a+x ./rusty-prism
 
-CMD cargo run
+CMD ./rusty-prism
