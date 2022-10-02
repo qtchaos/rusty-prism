@@ -22,8 +22,3 @@ jobs:
         with:
           name: executable
           path: ./target/release/rusty-prism
-      - name: Update release
-        uses: johnwbyrd/update-release@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: ./target/release/rusty-prism
