@@ -37,3 +37,32 @@ pub fn get_random(db: &State<MongoRepo>) -> Result<Json<Vec<Product>>, Status> {
         Err(_) => Err(Status::InternalServerError),
     }
 }
+
+#[get("/cart/<data>")]
+pub fn get_cart(db: &State<MongoRepo>, data: String) -> Result<Json<Vec<Product>>, Status> {
+    let data = data.replace("\"", "");
+
+    let decoded = base64::decode(&data).unwrap();
+    let decoded = String::from_utf8(decoded).unwrap();
+
+    let s_array: Vec<&str> = decoded.split(": ").collect();
+    let binding = s_array[1]
+        .replace("[", "")
+        .replace("]", "")
+        .replace("\n", "")
+        .replace("}", "");
+    let eans: Vec<&str> = binding.split(",").collect();
+
+    let mut products: Vec<Product> = Vec::new();
+    for ean in eans {
+        let ean = ean.parse::<i64>().unwrap();
+        let product_detail = db.get_product_ean(&ean);
+
+        match product_detail {
+            Ok(product) => products.push(product),
+            Err(_) => println!("Error"),
+        }
+    }
+    // return the products
+    Ok(Json(products))
+}

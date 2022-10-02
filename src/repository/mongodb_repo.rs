@@ -31,8 +31,17 @@ impl MongoRepo {
 
     pub fn get_product(&self, id: &String) -> Result<Product, Error> {
         let obj_id = ObjectId::parse_str(id).unwrap();
-        println!("id: {}", obj_id);
         let filter = doc! {"_id": obj_id};
+        let product_detail = self
+            .col
+            .find_one(filter, None)
+            .ok()
+            .expect("Error getting product detail.");
+        Ok(product_detail.unwrap())
+    }
+
+    pub fn get_product_ean(&self, ean: &i64) -> Result<Product, Error> {
+        let filter = doc! {"ean": ean};
         let product_detail = self
             .col
             .find_one(filter, None)
