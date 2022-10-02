@@ -1,5 +1,8 @@
 use crate::{models::product_model::Product, repository::mongodb_repo::MongoRepo};
+use base64_stream::FromBase64Reader;
 use rocket::{http::Status, serde::json::Json, State};
+use std::io::Cursor;
+use std::io::Read;
 
 #[get("/product/<path>")]
 pub fn get_product(db: &State<MongoRepo>, path: String) -> Result<Json<Product>, Status> {
@@ -38,28 +41,28 @@ pub fn get_random(db: &State<MongoRepo>) -> Result<Json<Vec<Product>>, Status> {
     }
 }
 
-#[get("/cart/<data>")]
-pub fn get_cart(db: &State<MongoRepo>, data: String) -> Result<Json<Vec<Product>>, Status> {
-    let data = data.replace("\"", "");
+#[get("/cart?<data>&<store>")]
+pub fn get_cart(
+    db: &State<MongoRepo>,
+    data: String,
+    store: String,
+) -> Result<Json<Vec<Product>>, Status> {
+    if store.is_empty() || data.is_empty() || data.len() > 250 {
+        return Err(Status::BadRequest);
+    };
+    let mut reader = FromBase64Reader::new(Cursor::new(data));
+    let mut data = String::new();
 
-    let decoded = base64::decode(&data).unwrap();
-    let decoded = String::from_utf8(decoded).unwrap();
-
-    let s_array: Vec<&str> = decoded.split(": ").collect();
-    let binding = s_array[1]
-        .replace("[", "")
-        .replace("]", "")
-        .replace("\n", "")
-        .replace("}", "");
-    let eans: Vec<&str> = binding.split(",").collect();
+    reader.read_to_string(&mut data).unwrap();
+    let eans: Vec<&str> = data.split(",").collect();
 
     let mut products: Vec<Product> = Vec::new();
     for ean in eans {
         let ean = ean.parse::<i64>().unwrap();
-        let product_detail = db.get_product_ean(&ean);
+        let product_detail = db.get_product_ean(&ean, &store);
 
         match product_detail {
-            Ok(product) => products.push(product),
+            Ok(product) => products.push(product[0].clone()),
             Err(_) => println!("Error"),
         }
     }

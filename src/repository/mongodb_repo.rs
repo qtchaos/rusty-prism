@@ -40,14 +40,35 @@ impl MongoRepo {
         Ok(product_detail.unwrap())
     }
 
-    pub fn get_product_ean(&self, ean: &i64) -> Result<Product, Error> {
-        let filter = doc! {"ean": ean};
-        let product_detail = self
+    pub fn get_product_ean(&self, ean: &i64, store: &String) -> Result<Vec<Product>, Error> {
+        let pipeline = vec![
+            doc! {
+                "$match": { "ean": ean, "store": store },
+            },
+            doc! {
+                "$limit": 200
+            },
+            doc! {
+                "$project": {
+                    "_id": 0
+                }
+            },
+        ];
+
+        let results = self
             .col
-            .find_one(filter, None)
+            .aggregate(pipeline, None)
             .ok()
             .expect("Error getting product detail.");
-        Ok(product_detail.unwrap())
+
+        let mut products: Vec<Product> = Vec::new();
+        for result in results {
+            if let Ok(item) = result {
+                let product: Product = bson::from_bson(bson::Bson::Document(item)).unwrap();
+                products.push(product);
+            }
+        }
+        Ok(products)
     }
 
     pub fn get_product_fuzzy(&self, fuzzy: &String) -> Result<Vec<Product>, Error> {
