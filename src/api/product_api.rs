@@ -41,11 +41,12 @@ pub fn get_random(db: &State<MongoRepo>) -> Result<Json<Vec<Product>>, Status> {
     }
 }
 
-#[get("/cart?<data>&<store>")]
+#[get("/cart?<data>&<store>&<all>")]
 pub fn get_cart(
     db: &State<MongoRepo>,
     data: String,
     store: String,
+    all: bool,
 ) -> Result<Json<Vec<Product>>, Status> {
     if store.is_empty() || data.is_empty() || data.len() > 250 {
         return Err(Status::BadRequest);
@@ -59,7 +60,7 @@ pub fn get_cart(
     let mut products: Vec<Product> = Vec::new();
     for ean in eans {
         let ean = ean.parse::<i64>().unwrap();
-        let product_detail = db.get_product_ean(&ean, &store);
+        let product_detail = db.get_product_ean(&ean, &store, &all);
 
         match product_detail {
             Ok(product) => products.push(product[0].clone()),

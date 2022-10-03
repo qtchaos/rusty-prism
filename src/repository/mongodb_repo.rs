@@ -14,6 +14,7 @@ use mongodb::{
 
 pub struct MongoRepo {
     col: Collection<Product>,
+    col2: Collection<Product>,
 }
 
 impl MongoRepo {
@@ -26,7 +27,8 @@ impl MongoRepo {
         let client = Client::with_uri_str(uri).unwrap();
         let db = client.database(&env::var("DB_ENV").unwrap());
         let col: Collection<Product> = db.collection(&env::var("COL2_ENV").unwrap());
-        MongoRepo { col }
+        let col2: Collection<Product> = db.collection(&env::var("COL_ENV").unwrap());
+        MongoRepo { col, col2 }
     }
 
     pub fn get_product(&self, id: &String) -> Result<Product, Error> {
@@ -40,7 +42,12 @@ impl MongoRepo {
         Ok(product_detail.unwrap())
     }
 
-    pub fn get_product_ean(&self, ean: &i64, store: &String) -> Result<Vec<Product>, Error> {
+    pub fn get_product_ean(
+        &self,
+        ean: &i64,
+        store: &String,
+        all: &bool,
+    ) -> Result<Vec<Product>, Error> {
         let pipeline = vec![
             doc! {
                 "$match": { "ean": ean, "store": store },
@@ -54,12 +61,17 @@ impl MongoRepo {
                 }
             },
         ];
-
-        let results = self
-            .col
-            .aggregate(pipeline, None)
-            .ok()
-            .expect("Error getting product detail.");
+        let results = if all == &true {
+            self.col2
+                .aggregate(pipeline, None)
+                .ok()
+                .expect("Error getting product detail.")
+        } else {
+            self.col
+                .aggregate(pipeline, None)
+                .ok()
+                .expect("Error getting product detail.")
+        };
 
         let mut products: Vec<Product> = Vec::new();
         for result in results {
